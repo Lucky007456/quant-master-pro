@@ -1,9 +1,20 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { FiArrowLeft, FiChevronRight, FiMessageCircle, FiRefreshCw, FiFlag, FiClock, FiZap } from 'react-icons/fi'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import questions from '../data/questions.json'
 import { shuffle } from '../utils/questionUtils.js'
 import { getTopicMeta } from '../constants/topics.js'
 import Modal from '../components/UI/Modal.jsx'
+
+// Initialize Gemini for Quiz explanations
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
+let geminiModel = null
+if (GEMINI_API_KEY) {
+  try {
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
+    geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+  } catch { /* will fallback */ }
+}
 
 export default function Quiz({ topic, onBack, recordAnswer, awardXP, XP_REWARDS, checkBadges, markActive, addHistory, toast }) {
   const [phase, setPhase] = useState(topic === '__daily__' ? 'quiz' : 'config') // config → quiz → results
@@ -83,11 +94,13 @@ export default function Quiz({ topic, onBack, recordAnswer, awardXP, XP_REWARDS,
     setSelected(i)
   }
 
+  const correctAnswer = current?.answer ?? 0 // index of correct option (0=a, 1=b, 2=c, 3=d)
+
   const handleCheck = () => {
     if (selected === null) return
     clearInterval(timerRef.current)
     setShowAnswer(true)
-    const isCorrect = selected === 0
+    const isCorrect = selected === correctAnswer
     const timeTaken = Math.round((Date.now() - qStartRef.current) / 1000)
     const result = { qId: current.id, selected, correct: isCorrect, time: timeTaken }
     setResults(prev => [...prev, result])
@@ -157,15 +170,23 @@ export default function Quiz({ topic, onBack, recordAnswer, awardXP, XP_REWARDS,
   const handleExplain = useCallback(async () => {
     setLoading(true)
     setExplanation('')
+    const correctIdx = current.answer ?? 0
+    const correctLetter = ['A', 'B', 'C', 'D'][correctIdx]
+    const correctOption = current.options[correctIdx]
     const prompt = `Solve concisely (under 6 lines):
 Q: ${current.question}
 A) ${current.options[0]}  B) ${current.options[1]}  C) ${current.options[2]}  D) ${current.options[3]}
 
+The correct answer is ${correctLetter}) ${correctOption}
+
 Format strictly:
-✅ Answer: [letter]
-📐 Solution: [2-3 line math steps]
+✅ Answer: ${correctLetter}) ${correctOption}
+📐 Solution: [2-3 line math steps showing why this is correct]
 ⚡ Shortcut: [1 line trick if any]`
 
+    let answered = false
+
+    // Try Ollama first (local)
     try {
       const res = await fetch('http://localhost:11434/api/generate', {
         method: 'POST',
@@ -190,9 +211,24 @@ Format strictly:
           } catch { /* skip */ }
         }
       }
-    } catch {
-      setExplanation(`⚠️ Ollama offline. Run: ollama serve\n\nAnswer: A) ${current.options[0]}`)
+      answered = true
+    } catch { /* Ollama offline, try Gemini */ }
+
+    // Try Gemini (cloud)
+    if (!answered && geminiModel) {
+      try {
+        const result = await geminiModel.generateContent(prompt)
+        const text = result.response.text()
+        setExplanation(text)
+        answered = true
+      } catch { /* Gemini failed */ }
     }
+
+    // Static fallback
+    if (!answered) {
+      setExplanation(`✅ Answer: ${correctLetter}) ${correctOption}\n\n⚠️ AI explanation unavailable.\nSet VITE_GEMINI_API_KEY in .env for cloud AI, or run: ollama serve`)
+    }
+
     setLoading(false)
   }, [current])
 
@@ -326,8 +362,8 @@ Format strictly:
       <div className="options-grid">
         {current.options.map((opt, i) => {
           let cls = 'option-card'
-          if (showAnswer && i === 0) cls += ' correct'
-          else if (showAnswer && selected === i && i !== 0) cls += ' wrong'
+          if (showAnswer && i === correctAnswer) cls += ' correct'
+          else if (showAnswer && selected === i && i !== correctAnswer) cls += ' wrong'
           else if (selected === i) cls += ' selected'
           return (
             <button key={i} className={cls} onClick={() => handleSelect(i)}>
