@@ -40,9 +40,15 @@ export function useAuth() {
     }
   };
 
+  const loginWithGoogle = async () => {
+    const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
+    const provider = new GoogleAuthProvider();
+    return signInWithPopup(auth, provider);
+  };
+
   const logout = () => {
     return signOut(auth);
   };
 
-  return { user, loading, loginWithUsername, logout };
+  return { user, loading, loginWithUsername, loginWithGoogle, logout };
 }

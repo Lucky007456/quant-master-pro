@@ -1376,6 +1376,36 @@ h1, h2, h3, h4 {
 
 .login-btn svg { font-size: 1.2rem; }
 
+.login-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 24px 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border);
+}
+
+.login-divider:not(:empty)::before { margin-right: 16px; }
+.login-divider:not(:empty)::after { margin-left: 16px; }
+
+.google-btn {
+  transition: var(--transition);
+}
+
+.google-btn:hover {
+  background: var(--bg-surface) !important;
+  border-color: var(--accent-amber) !important;
+  transform: translateY(-2px);
+}
+
 .login-footer {
   margin-top: 32px;
   text-align: center;

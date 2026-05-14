@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { FiUser, FiArrowRight, FiZap } from 'react-icons/fi';
+import { FcGoogle } from 'react-icons/fc';
 
-export default function Login({ onLogin, loading }) {
+export default function Login({ onLogin, onGoogleLogin, loading }) {
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
 
@@ -56,6 +57,19 @@ export default function Login({ onLogin, loading }) {
             )}
           </button>
         </form>
+
+        <div className="login-divider">
+          <span>OR</span>
+        </div>
+
+        <button 
+          className="btn btn-secondary btn-lg google-btn" 
+          onClick={onGoogleLogin} 
+          disabled={loading}
+          style={{ width: '100%', background: 'var(--bg-elevated)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}
+        >
+          <FcGoogle size={24} /> Sign in with Google
+        </button>
 
         <div className="login-footer">
           <p>Your progress will be saved automatically to the cloud.</p>

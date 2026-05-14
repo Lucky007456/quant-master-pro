@@ -22,7 +22,7 @@ export default function App() {
   const [showConfetti, setShowConfetti] = useState(false)
   const [authLoading, setAuthLoading] = useState(false)
 
-  const { user, loading: authInit, loginWithUsername, logout } = useAuth()
+  const { user, loading: authInit, loginWithUsername, loginWithGoogle, logout } = useAuth()
   const { store, setStore, recordAnswer, getTopicStats, getTotalStats } = useProgress(user)
   const { awardXP, XP_REWARDS, xp } = useXP(store, setStore)
   const { markActive } = useStreak(store, setStore)
@@ -35,8 +35,20 @@ export default function App() {
       await loginWithUsername(username)
       toast.success(`Welcome, ${username}!`)
     } catch (err) {
-      toast.error('Could not enter arena. Try again.')
+      toast.error(err.message || 'Could not enter arena.')
       throw err
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  const handleGoogleLogin = async () => {
+    setAuthLoading(true)
+    try {
+      const user = await loginWithGoogle()
+      toast.success(`Welcome, ${user.user.displayName}!`)
+    } catch (err) {
+      toast.error('Google Sign-In failed.')
     } finally {
       setAuthLoading(false)
     }
@@ -98,7 +110,7 @@ export default function App() {
   if (!user) {
     return (
       <>
-        <Login onLogin={handleLogin} loading={authLoading} />
+        <Login onLogin={handleLogin} onGoogleLogin={handleGoogleLogin} loading={authLoading} />
         <ToastContainer />
       </>
     )
