@@ -24,7 +24,7 @@ export function useAuth() {
   }, []);
 
   const loginWithUsername = async (username) => {
-    const email = `${username.toLowerCase().trim()}@quantmaster.local`;
+    const email = `${username.toLowerCase().trim()}@quantmaster.com`;
     try {
       // Try to login
       const cred = await signInWithEmailAndPassword(auth, email, INTERNAL_PWD);

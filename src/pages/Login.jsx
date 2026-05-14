@@ -15,7 +15,8 @@ export default function Login({ onLogin, loading }) {
     try {
       await onLogin(username.trim());
     } catch (err) {
-      setError('Something went wrong. Try a different name.');
+      console.error(err);
+      setError(err.message || 'Something went wrong. Try a different name.');
     }
   };
 
