@@ -1,0 +1,16 @@
+{
+  "name": "QuantMaster",
+  "short_name": "QuantMaster",
+  "description": "Quantitative Aptitude Quiz & AI Tutor",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0e17",
+  "theme_color": "#0f0e17",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
