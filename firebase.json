@@ -1,0 +1,11 @@
+{
+  "auth": {
+    "providers": {
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "QuantMaster",
+        "supportEmail": "lakshmanan.rofficial7@gmail.com"
+      }
+    }
+  }
+}

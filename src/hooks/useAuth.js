@@ -5,17 +5,25 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signOut,
-  updateProfile
+  updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult
 } from 'firebase/auth';
 
 // Internal password used for the username-only system
 const INTERNAL_PWD = "quant_master_pass_2024";
+const googleProvider = new GoogleAuthProvider();
 
 export function useAuth() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check for redirect result on page load (for mobile Google Sign-In)
+    getRedirectResult(auth).catch(() => {});
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
@@ -41,9 +49,16 @@ export function useAuth() {
   };
 
   const loginWithGoogle = async () => {
-    const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
-    const provider = new GoogleAuthProvider();
-    return signInWithPopup(auth, provider);
+    try {
+      // Try popup first (works on desktop)
+      return await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      // If popup blocked (common on mobile), fall back to redirect
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+        return signInWithRedirect(auth, googleProvider);
+      }
+      throw err;
+    }
   };
 
   const logout = () => {
